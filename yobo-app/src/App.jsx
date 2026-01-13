@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Droplets, Plus, Trash2, X, CheckCircle2, Circle } from 'lucide-react';
 
 const App = () => {
+  // 1. Initiales Laden & Sofortiges Sortieren (Neueste zuerst)
   const [logs, setLogs] = useState(() => {
     const saved = localStorage.getItem('yobo-hair-logs');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return parsed.sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
   });
 
-  // Zustände für Auswahlmodus und selektierte IDs
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
-  
   const [showModal, setShowModal] = useState(false);
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   const [newLocation, setNewLocation] = useState('Zuhause');
@@ -21,54 +22,58 @@ const App = () => {
     localStorage.setItem('yobo-hair-logs', JSON.stringify(logs));
   }, [logs]);
 
-  // Umschalten des Auswahlmodus & Reset der Selektion
+  // 2. Logik zum Hinzufügen mit Re-Sortierung
+  const handleSave = (e) => {
+    e.preventDefault();
+    if (!newLocation || !newDate) return;
+
+    const entry = {
+      id: Date.now(),
+      date: new Date(newDate).toLocaleDateString('de-DE'),
+      rawDate: newDate, // technisches Format für präzise Sortierung
+      location: newLocation,
+      action: 'Hauptwäsche'
+    };
+
+    // Bestehende Logs + Neuer Eintrag -> Sortieren
+    const updatedLogs = [...logs, entry].sort((a, b) => 
+      new Date(b.rawDate) - new Date(a.rawDate)
+    );
+    
+    setLogs(updatedLogs);
+    setShowModal(false);
+    setNewLocation('Zuhause');
+  };
+
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);
     setSelectedIds([]);
   };
 
-  // Einzelnen Eintrag für Löschung markieren/entmarkieren
   const toggleSelection = (id) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter(itemId => itemId !== id));
-    } else {
-      setSelectedIds([...selectedIds, id]);
-    }
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
   };
 
   const deleteSelected = () => {
-    if (selectedIds.length === 0) return;
-    if (confirm(`${selectedIds.length} Eintrag/Einträge wirklich löschen?`)) {
+    if (confirm(`${selectedIds.length} Eintrag/Einträge löschen?`)) {
       setLogs(logs.filter(log => !selectedIds.includes(log.id)));
       setSelectedIds([]);
       setIsSelectMode(false);
     }
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    const entry = {
-      id: Date.now(),
-      date: new Date(newDate).toLocaleDateString('de-DE'),
-      rawDate: newDate,
-      location: newLocation,
-      action: 'Hauptwäsche'
-    };
-    setLogs([entry, ...logs].sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate)));
-    setShowModal(false);
-  };
-
   return (
     <div className="max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col shadow-2xl relative">
       <header className="p-8 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-b-[3rem] shadow-lg">
-        <h1 className="text-3xl font-bold tracking-tight">Yobo Hair-Log ✨</h1>
-        <p className="opacity-80 text-sm italic">Dein persönliches Haar-Tagebuch</p>
+        <h1 className="text-3xl font-bold tracking-tight text-center">Yobo Hair-Log ✨</h1>
       </header>
 
       <main className="p-6 flex-grow mb-24">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">
-            {isSelectMode ? 'Auswählen' : 'Verlauf'}
+            {isSelectMode ? 'Auswählen' : 'Chronik'}
           </h2>
           
           <div className="flex gap-2">
@@ -76,9 +81,7 @@ const App = () => {
               <button 
                 onClick={toggleSelectMode}
                 className={`px-4 py-2 rounded-full font-bold text-xs transition-all border ${
-                  isSelectMode 
-                  ? 'bg-slate-800 text-white border-slate-800' 
-                  : 'bg-white text-slate-600 border-slate-200 shadow-sm'
+                  isSelectMode ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border-slate-200 shadow-sm'
                 }`}
               >
                 {isSelectMode ? 'Abbrechen' : 'Bearbeiten'}
@@ -124,33 +127,46 @@ const App = () => {
               </div>
             </div>
           ))}
+          {logs.length === 0 && (
+            <div className="text-center py-20 text-slate-300 italic text-sm">Keine Einträge vorhanden.</div>
+          )}
         </div>
       </main>
 
-      {/* DYNAMISCHER LÖSCH-BAR UNTEN */}
       {isSelectMode && selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-50 animate-in slide-in-from-bottom-10 duration-300">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-50 animate-in slide-in-from-bottom-10">
           <button 
             onClick={deleteSelected}
-            className="w-full bg-red-600 text-white py-4 rounded-3xl font-bold shadow-2xl flex items-center justify-center gap-2 hover:bg-red-700 transition-colors"
+            className="w-full bg-red-600 text-white py-4 rounded-3xl font-bold shadow-2xl flex items-center justify-center gap-2 hover:bg-red-700"
           >
             <Trash2 size={20} />
-            {selectedIds.length} {selectedIds.length === 1 ? 'Eintrag' : 'Einträge'} löschen
+            {selectedIds.length} löschen
           </button>
         </div>
       )}
 
-      {/* MODAL (Bleibt gleich) */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
           <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-slate-800">Nachtragen</h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><X /></button>
+              <button onClick={() => setShowModal(false)} className="text-slate-400"><X /></button>
             </div>
             <form onSubmit={handleSave} className="space-y-5">
-              <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none font-medium text-slate-800" />
-              <input type="text" list="location-suggestions" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} placeholder="Ort" className="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none font-medium text-slate-800" />
+              <input 
+                type="date" 
+                value={newDate} 
+                onChange={(e) => setNewDate(e.target.value)} 
+                className="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none font-medium" 
+              />
+              <input 
+                type="text" 
+                list="location-suggestions" 
+                value={newLocation} 
+                onChange={(e) => setNewLocation(e.target.value)} 
+                placeholder="Ort" 
+                className="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none font-medium" 
+              />
               <datalist id="location-suggestions">
                 {suggestedLocations.map((loc, i) => <option key={i} value={loc} />)}
               </datalist>
