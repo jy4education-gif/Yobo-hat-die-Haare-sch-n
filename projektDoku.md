@@ -36,7 +36,7 @@
 
 ### Phase 4: UX & Sound-Design
 * Integration von akustischem Feedback für Startup, Klicks und erfolgreiche Aktionen.
-* Dynamische UI-Elemente: Sortier-Buttons für Datum und Alphabet (A-Z), die ihren Status grafisch anzeigen.
+* Dynamische UI-Elemente: Sortier-Buttons für Datum und Alphabet (A-Z), die ihren Status grafisch anzeigen. TBD!
 
 ---
 
