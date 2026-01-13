@@ -1,0 +1,26 @@
+Schritt 1: Das Projekt-Setup (Terminal in VS Code)
+
+# 1. Erstelle das Projektverzeichnis
+npm create vite@latest yobo-app -- --template react
+
+# 2. Geh in den Ordner
+cd yobo-app
+
+# 3. Installiere die Grundbausteine (Tailwind & Icons)
+npm install
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -^^p
+npm install lucide-react date-fns
+
+Schritt 2: Konfiguration (Tailwind)
+
+Ersetze den Inhalt der eben erstellten Datei tailwind.config.js mit diesem Code, damit das Design sauber erkannt wird:
+
+JavaScript:
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: { extend: {} },
+  plugins: [],
+}
