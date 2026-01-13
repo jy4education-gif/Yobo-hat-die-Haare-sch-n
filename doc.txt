@@ -24,3 +24,5 @@ export default {
   theme: { extend: {} },
   plugins: [],
 }
+
+schön, dass Du das liest!
