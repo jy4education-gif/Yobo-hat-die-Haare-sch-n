@@ -80,3 +80,5 @@ Im Verlauf der Entwicklung traten signifikante technische Hürden auf, die wie f
 1.  **Icon-Design:** Erstellung eines dedizierten Favicons für den iOS-Homescreen.
 2.  **PWA Manifest:** Hinzufügen einer `manifest.json` für echtes Standalone-Feeling.
 3.  **Netlify Deployment:** Hosting der App unter einer öffentlichen URL.
+
+Front End ist besser als gedacht :-)
